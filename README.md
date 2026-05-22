@@ -217,7 +217,7 @@ Head tracking calibrates on the first 2.5 seconds of runtime, treating the avera
 #   data/sessions/train/
 #   data/sessions/val/
 
-python training/train.py
+python -m training.train
 # Outputs: models/checkpoints/best_model.pt + models/browsync.onnx
 ```
 
