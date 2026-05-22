@@ -22,7 +22,7 @@ pip install -r requirements.txt
 ## Quick Start
 
 ```bash
-# Rules-only mode — no trained model needed
+# Default startup (will load the model at start)
 python -m ws_server.server
 
 # With ONNX model and terminal UI
