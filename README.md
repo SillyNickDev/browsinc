@@ -40,7 +40,7 @@ browsync/
 pip install -r requirements.txt
 
 # Run in rules-only mode (no trained model needed)
-python ws_server/server.py
+python -m ws_server.server
 
 # Run with trained model
 python ws_server/server.py --model models/browsync.onnx
