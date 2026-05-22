@@ -50,4 +50,4 @@ data/sessions/donated/
 # build artifacts
 /BrowSyncModule/BrowSyncModule/bin
 /BrowSyncModule/BrowSyncModule/obj
-/BrowSyncModule\BrowSyncModule\bin\Debug\
+/BrowSyncModule/BrowSyncModule/bin/Debug/
