@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <AssemblyName>BrowSyncModule</AssemblyName>
+    <RootNamespace>BrowSyncModule</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>AnyCPU</Platforms>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Reference VRCFaceTracking.Core from the VRCFT install directory.
+      Adjust the path if VRCFT is installed to a non-default location.
+      The default Steam install path is used here.
+    -->
+    <Reference Include="VRCFaceTracking.Core">
+      <HintPath>$(APPDATA)\VRCFaceTracking\VRCFaceTracking.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+<!-- Add to your BrowSyncModule.csproj -->
+<ItemGroup>
+  <Reference Include="VRCFaceTracking.SDK">
+    <HintPath>libs\VRCFaceTracking.SDK.dll</HintPath>
+    <Private>false</Private>
+  </Reference>
+</ItemGroup>
+
+  <ItemGroup>
+  <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
+  <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+</ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\" />
+  </ItemGroup>
+
+  <!--
+    Build event: copies the compiled DLL straight to VRCFT's CustomLibs folder
+    so you don't have to manually copy it after every build.
+    Comment this out if you want to control deployment manually.
+  -->
+  <Target Name="DeployToVRCFT" AfterTargets="Build">
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(APPDATA)\VRCFaceTracking\CustomLibs" SkipUnchangedFiles="true" ContinueOnError="true" />
+  </Target>
+
+</Project>

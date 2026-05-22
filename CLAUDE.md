@@ -6,7 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 BrowSync is a real-time eyebrow tracking system for VRChat using a hybrid rule-based + ML approach. It estimates VRCFT Unified Expression brow parameters from eye tracking, lower face tracking, and microphone prosody data — enabling expressive brow animation without a Quest Pro headset.
 
+## Two-component system
+
+BrowSync has two independent pieces that work together:
+
+1. **Python server** (`ws_server/`) — runs inference at 90fps, exposes a WebSocket on port 7720
+2. **C# VRCFT plugin** (`BrowSyncModule/`) — connects to the server, writes inferred brow shapes into VRCFT so they reach VRChat via OSC
+
+Start the Python server first, then launch VRCFT.
+
 ## Commands
+
+### Python server
 
 ```bash
 # Install dependencies
@@ -16,13 +27,24 @@ pip install -r requirements.txt
 python -m ws_server.server
 
 # Run inference server with ONNX model and TUI
-python ws_server/server.py --model models/browsync.onnx
+python -m ws_server.server --model models/browsync.onnx
+
+# Headless mode (no TUI, log to console)
+python -m ws_server.server --model models/browsync.onnx --no-tui
 
 # Train model (requires labelled session data in data/sessions/)
 python training/train.py
 
 # Launch TUI standalone (server embedded inside TUI)
 python TUI/tui.py
+```
+
+### C# VRCFT module
+
+```bash
+cd BrowSyncModule
+dotnet build -c Release
+# Post-build step copies DLL to %APPDATA%\VRCFaceTracking\CustomLibs\ automatically
 ```
 
 No dedicated test runner or lint config is present in this repo.
@@ -82,6 +104,8 @@ Mode degrades automatically when data sources become unavailable or stale (VRCFT
 **`training/train.py`** — `BrowSequenceDataset` loads `.jsonl` sessions with stride-3 sliding windows. `BrowSyncLoss` = MSE + temporal smoothness penalty + asymmetric per-output weights (raises 1.3x). Unlabelled (rule pseudo-label) frames contribute at 0.25 weight. Exports final model to ONNX with embedded normalization stats. Config: 60 epochs, batch=64, LR=3e-4, early stop patience=15.
 
 **`TUI/tui.py`** — Textual app embedding the server as an asyncio worker. `InferencePanel` shows mode (color-coded), FPS, per-AU bar meters, and source status indicators. Keys: `q`=quit, `r`=recalibrate head, `Ctrl+L`=dev log.
+
+**`BrowSyncModule/`** — C# VRCFT plugin (net7.0). `BrowSyncClient.cs` maintains a persistent WebSocket connection to the Python server with auto-reconnect (3s backoff) and a 5s ping keepalive. `BrowSyncModule.cs` inherits `ExtTrackingModule`, declares `SupportsExpression: true` / `SupportsEye: false`, and writes the 8 brow `UnifiedExpressions` shapes at ~90fps. Only brow shapes are written — eye and lower-face are left to the user's existing VRCFT modules. On disconnect, brow shapes are zeroed. On reconnect, a `reset` is sent to clear the Python server's GRU buffer. All connection config (host, port, timeouts) is hardcoded in those two files.
 
 ### Data Formats
 

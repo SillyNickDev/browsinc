@@ -1,0 +1,54 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\NickDoberman\\Downloads\\BrowSyncModule\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|BrowSyncModule\\BrowSyncModule.csproj|c:\\users\\nickdoberman\\downloads\\browsyncmodule\\browsyncmodule\\browsyncclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|BrowSyncModule\\BrowSyncModule.csproj|solutionrelative:browsyncmodule\\browsyncclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|BrowSyncModule\\BrowSyncModule.csproj|c:\\users\\nickdoberman\\downloads\\browsyncmodule\\browsyncmodule\\browsyncmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|BrowSyncModule\\BrowSyncModule.csproj|solutionrelative:browsyncmodule\\browsyncmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "BrowSyncClient.cs",
+              "DocumentMoniker": "C:\\Users\\NickDoberman\\Downloads\\BrowSyncModule\\BrowSyncModule\\BrowSyncClient.cs",
+              "RelativeDocumentMoniker": "BrowSyncModule\\BrowSyncClient.cs",
+              "ToolTip": "C:\\Users\\NickDoberman\\Downloads\\BrowSyncModule\\BrowSyncModule\\BrowSyncClient.cs",
+              "RelativeToolTip": "BrowSyncModule\\BrowSyncClient.cs",
+              "ViewState": "AgIAAMwAAAAAAAAAAAA7wPYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-21T11:46:33.321Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "BrowSyncModule.cs",
+              "DocumentMoniker": "C:\\Users\\NickDoberman\\Downloads\\BrowSyncModule\\BrowSyncModule\\BrowSyncModule.cs",
+              "RelativeDocumentMoniker": "BrowSyncModule\\BrowSyncModule.cs",
+              "ToolTip": "C:\\Users\\NickDoberman\\Downloads\\BrowSyncModule\\BrowSyncModule\\BrowSyncModule.cs",
+              "RelativeToolTip": "BrowSyncModule\\BrowSyncModule.cs",
+              "ViewState": "AgIAAJAAAAAAAAAAAAAiwLkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-21T09:59:27.621Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
