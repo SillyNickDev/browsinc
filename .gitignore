@@ -17,6 +17,7 @@ ENV/
 .history/
 *.user
 *.suo
+.claude/
 
 # OS files
 .DS_Store
