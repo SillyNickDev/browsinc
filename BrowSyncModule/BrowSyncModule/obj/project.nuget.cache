@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "P++Pt3wonaM=",
+  "dgSpecHash": "R8JTC5S/o2o=",
   "success": true,
-  "projectFilePath": "C:\\Users\\NickDoberman\\Downloads\\BrowSyncModule\\BrowSyncModule\\BrowSyncModule.csproj",
+  "projectFilePath": "c:\\Users\\NickDoberman\\Projects\\browsync\\BrowSyncModule\\BrowSyncModule\\BrowSyncModule.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\NickDoberman\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\10.0.8\\microsoft.extensions.dependencyinjection.10.0.8.nupkg.sha512",
     "C:\\Users\\NickDoberman\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.8\\microsoft.extensions.dependencyinjection.abstractions.10.0.8.nupkg.sha512",
@@ -16,8 +16,8 @@
     "C:\\Users\\NickDoberman\\.nuget\\packages\\system.diagnostics.diagnosticsource\\10.0.8\\system.diagnostics.diagnosticsource.10.0.8.nupkg.sha512",
     "C:\\Users\\NickDoberman\\.nuget\\packages\\system.memory\\4.6.3\\system.memory.4.6.3.nupkg.sha512",
     "C:\\Users\\NickDoberman\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.1.2\\system.runtime.compilerservices.unsafe.6.1.2.nupkg.sha512",
-    "C:\\Users\\NickDoberman\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\7.0.20\\microsoft.windowsdesktop.app.ref.7.0.20.nupkg.sha512",
     "C:\\Users\\NickDoberman\\.nuget\\packages\\microsoft.netcore.app.ref\\7.0.20\\microsoft.netcore.app.ref.7.0.20.nupkg.sha512",
+    "C:\\Users\\NickDoberman\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\7.0.20\\microsoft.windowsdesktop.app.ref.7.0.20.nupkg.sha512",
     "C:\\Users\\NickDoberman\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\7.0.20\\microsoft.aspnetcore.app.ref.7.0.20.nupkg.sha512"
   ],
   "logs": []

@@ -26,11 +26,12 @@ log = logging.getLogger("browsync.mic")
 # Config
 # ---------------------------------------------------------------------------
 
-SAMPLE_RATE     = 16000     # Hz — enough for pitch/energy, low CPU cost
-BLOCK_SIZE      = 512       # samples per callback (~32ms at 16kHz)
-ANALYSIS_WINDOW = 0.10      # seconds of audio per prosody update
-PITCH_MIN_HZ    = 80.0      # below this = not voiced
-PITCH_MAX_HZ    = 400.0     # above this = not voiced (for speech)
+SAMPLE_RATE       = 16000     # Hz — enough for pitch/energy, low CPU cost
+BLOCK_SIZE        = 512       # samples per callback (~32ms at 16kHz)
+ANALYSIS_WINDOW   = 0.10      # seconds of audio per prosody update
+PITCH_MIN_HZ      = 80.0      # below this = not voiced
+PITCH_MAX_HZ      = 400.0     # above this = not voiced (for speech)
+MIC_SETTLING_SECS = 10.0      # wall-clock seconds to consider mic "settling" after recalibrate
 
 # Normalisation ranges
 ENERGY_FLOOR_DB = -60.0
@@ -88,6 +89,10 @@ class MicrophoneProcessor:
         self._prev_energy_norm = 0.0
         self._energy_onset_threshold = 0.3
 
+        # Recalibration settling state
+        self._settling: bool = False
+        self._settling_start: float = 0.0
+
     @property
     def latest(self) -> ProsodyFrame:
         with self._lock:
@@ -96,6 +101,35 @@ class MicrophoneProcessor:
     @property
     def is_available(self) -> bool:
         return self._available
+
+    @property
+    def settling(self) -> bool:
+        """True for MIC_SETTLING_SECS after recalibrate() is called."""
+        if not self._settling:
+            return False
+        if time.monotonic() - self._settling_start >= MIC_SETTLING_SECS:
+            self._settling = False
+            log.info("[Mic] Settling complete.")
+            return False
+        return True
+
+    @property
+    def ready_in_ms(self) -> int:
+        """Milliseconds until settling is considered done; 0 when ready."""
+        if not self._settling:
+            return 0
+        remaining = MIC_SETTLING_SECS - (time.monotonic() - self._settling_start)
+        return max(0, int(remaining * 1000))
+
+    def recalibrate(self) -> None:
+        """Reset mic rolling state and start a settling period."""
+        self._pitch_history.clear()
+        self._energy_history.clear()
+        self._onset_times.clear()
+        self._prev_energy_norm = 0.0
+        self._settling = True
+        self._settling_start = time.monotonic()
+        log.info("[Mic] Recalibration requested — settling for ~10s.")
 
     def start(self):
         self._stop.clear()
@@ -383,6 +417,12 @@ class MicrophoneProcessorWithSER(MicrophoneProcessor):
         # Load SER model before starting capture thread
         self._ser.load(self._sample_rate)
         super().start()
+
+    def recalibrate(self) -> None:
+        super().recalibrate()
+        self._ser_valence = 0.0
+        self._ser_arousal = 0.0
+        self._ser_confidence = 0.0
 
     def _analyse(self, audio: np.ndarray) -> "ProsodyFrame":
         frame = super()._analyse(audio)

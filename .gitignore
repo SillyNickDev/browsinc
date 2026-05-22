@@ -46,3 +46,8 @@ models/checkpoints/
 
 # Donated training sessions (local only, never shared)
 data/sessions/donated/
+
+# build artifacts
+/BrowSyncModule/BrowSyncModule/bin
+/BrowSyncModule/BrowSyncModule/obj
+/BrowSyncModule\BrowSyncModule\bin\Debug\

@@ -669,11 +669,11 @@
   "project": {
     "version": "0.1.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\NickDoberman\\Downloads\\BrowSyncModule\\BrowSyncModule\\BrowSyncModule.csproj",
+      "projectUniqueName": "C:\\Users\\NickDoberman\\Projects\\browsync\\BrowSyncModule\\BrowSyncModule\\BrowSyncModule.csproj",
       "projectName": "BrowSyncModule",
-      "projectPath": "C:\\Users\\NickDoberman\\Downloads\\BrowSyncModule\\BrowSyncModule\\BrowSyncModule.csproj",
+      "projectPath": "C:\\Users\\NickDoberman\\Projects\\browsync\\BrowSyncModule\\BrowSyncModule\\BrowSyncModule.csproj",
       "packagesPath": "C:\\Users\\NickDoberman\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\NickDoberman\\Downloads\\BrowSyncModule\\BrowSyncModule\\obj\\",
+      "outputPath": "C:\\Users\\NickDoberman\\Projects\\browsync\\BrowSyncModule\\BrowSyncModule\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

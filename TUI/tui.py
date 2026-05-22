@@ -13,9 +13,12 @@ Future expansion (from project TODO):
 
 Controls
 --------
-  q   Quit
-  r   Recalibrate head tracker (hold neutral pose)
-  Ctrl+L  Toggle Textual developer log panel
+  q         Quit
+  r         Recalibrate head tracker (hold neutral pose)
+  m         Recalibrate mic baseline
+  g         Reset GRU hidden state buffer
+  shift+r   Recalibrate all subsystems
+  Ctrl+L    Toggle Textual developer log panel
 """
 from __future__ import annotations
 
@@ -107,6 +110,24 @@ class InferencePanel(Static):
             f"   {_src(s.head_active or s.calibrating, 'Head')}{calib}"
         )
 
+        # ── subsystem calibration status ─────────────────────────────────
+        if s.calibrating:
+            head_st = f"[yellow]settling {s.head_ready_in_ms / 1000:.1f}s…[/]"
+        elif s.head_active:
+            head_st = "[green]locked[/]"
+        else:
+            head_st = "[dim]unavailable[/]"
+
+        if s.mic_settling:
+            mic_st = f"[yellow]settling {s.mic_ready_in_ms / 1000:.0f}s…[/]"
+        elif s.mic_active:
+            mic_st = "[green]locked[/]"
+        else:
+            mic_st = "[dim]unavailable[/]"
+
+        gru_st = "[green]ready[/]" if s.model_loaded else "[dim]no model[/]"
+        subsys = f"\n  HEAD {head_st}   MIC {mic_st}   GRU {gru_st}"
+
         # ── AU bars ─────────────────────────────────────────────────────
         divider = "\n  [dim]" + "─" * 58 + "[/]"
         au_lines = [divider]
@@ -118,7 +139,7 @@ class InferencePanel(Static):
                 f"    {label:<8} R  {_bar(rv)}  [cyan]{rv:.2f}[/]"
             )
 
-        return "\n".join([header, divider, sources, *au_lines, ""])
+        return "\n".join([header, divider, sources, subsys, *au_lines, ""])
 
 
 # ---------------------------------------------------------------------------
@@ -139,8 +160,11 @@ class BrowSyncApp(App):
     """
 
     BINDINGS = [
-        Binding("q", "quit", "Quit"),
-        Binding("r", "recalibrate", "Recalibrate Head"),
+        Binding("q",       "quit",              "Quit"),
+        Binding("r",       "recalibrate_head",  "Recal Head"),
+        Binding("m",       "recalibrate_mic",   "Recal Mic"),
+        Binding("g",       "recalibrate_gru",   "Reset GRU"),
+        Binding("shift+r", "recalibrate_all",   "Recal All"),
     ]
 
     TITLE = "BrowSync"
@@ -149,7 +173,7 @@ class BrowSyncApp(App):
     def __init__(
         self,
         server_run_coro,
-        on_recalibrate: Callable[[], None],
+        on_recalibrate: Callable[[str], None],
     ) -> None:
         super().__init__()
         self._server_coro    = server_run_coro
@@ -182,9 +206,21 @@ class BrowSyncApp(App):
         if self._panel is not None:
             self._panel.set_status(status)
 
-    def action_recalibrate(self) -> None:
-        self._on_recalibrate()
-        self.notify("Head tracker recalibrating — hold neutral pose.", title="Recalibrate")
+    def action_recalibrate_head(self) -> None:
+        self._on_recalibrate("head")
+        self.notify("Head tracker recalibrating — hold neutral pose.", title="Recalibrate Head")
+
+    def action_recalibrate_mic(self) -> None:
+        self._on_recalibrate("mic")
+        self.notify("Mic baseline resetting — settling for ~10s.", title="Recalibrate Mic")
+
+    def action_recalibrate_gru(self) -> None:
+        self._on_recalibrate("gru")
+        self.notify("GRU buffer cleared.", title="Reset GRU")
+
+    def action_recalibrate_all(self) -> None:
+        self._on_recalibrate("all")
+        self.notify("All subsystems recalibrating.", title="Recalibrate All")
 
 
 # ---------------------------------------------------------------------------

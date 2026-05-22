@@ -281,6 +281,41 @@ class InferenceEngine:
         if self._inference:
             self._inference.reset_buffer()
 
+    def recalibrate(self, target: str) -> dict:
+        """
+        Reset one or more subsystems. Returns a dict describing the ack payload.
+        target: "head" | "mic" | "gru" | "all"
+        If all sources are offline (noise_only), returns status "deferred".
+        """
+        head_avail = self.head_tracker.is_available
+        mic_avail  = self.mic.is_available
+        any_avail  = head_avail or mic_avail
+
+        do_head = target in ("head", "all")
+        do_mic  = target in ("mic",  "all")
+        do_gru  = target in ("gru",  "all")
+
+        if not any_avail and target == "all":
+            # No sources online — subsystems will self-calibrate when they reconnect
+            return {"target": target, "status": "deferred", "ready_in_ms": None}
+
+        if do_head:
+            self.head_tracker.recalibrate()
+        if do_mic:
+            self.mic.recalibrate()
+        if do_gru:
+            self.reset_buffer()
+
+        if target == "gru":
+            return {"target": "gru", "status": "ready", "ready_in_ms": 0}
+        if target == "head":
+            return {"target": "head", "status": "settling", "ready_in_ms": 2500}
+        if target == "mic":
+            return {"target": "mic", "status": "settling",
+                    "ready_in_ms": self.mic.ready_in_ms or 10000}
+        # all
+        return {"target": "all", "status": "settling", "ready_in_ms": 10000}
+
     def start(self):
         self._stop.clear()
         self._thread = threading.Thread(
@@ -333,11 +368,11 @@ class InferenceEngine:
     def _step(self, dt: float) -> tuple[np.ndarray, str]:
         # Gather sources
         head_frame  = self.head_tracker.latest
-        head_active = self.head_tracker.is_available and self.head_tracker.calibrated
+        head_active = self.head_tracker.is_available   # true even during settling (raw frames)
         head_array  = head_frame.to_array()
 
         prosody     = self.mic.latest
-        mic_active  = self.mic.is_available
+        mic_active  = self.mic.is_available and not self.mic.settling
 
         with self._vrcft_lock:
             vrcft_inputs = dict(self._vrcft_inputs)
@@ -359,7 +394,7 @@ class InferenceEngine:
             return self._smoother.smooth(out, dt), mode
 
         # Assemble inputs from all available sources
-        prosody_dict = prosody.to_feature_dict()
+        prosody_dict = prosody.to_feature_dict() if mic_active else {}
         inputs = assemble_inputs(
             vrcft_inputs if eye_face_active else {},
             prosody_dict,
@@ -407,9 +442,12 @@ class InferenceEngine:
         status = PreviewStatus(
             mode=mode,
             eye_face_active=(time.monotonic() - self._vrcft_ts) < VRCFT_STALE_THRESHOLD,
-            mic_active=self.mic.is_available,
+            mic_active=self.mic.is_available and not self.mic.settling,
             head_active=self.head_tracker.is_available and self.head_tracker.calibrated,
-            calibrating=self.head_tracker.is_available and not self.head_tracker.calibrated,
+            calibrating=self.head_tracker.settling,
+            mic_settling=self.mic.settling,
+            head_ready_in_ms=self.head_tracker.ready_in_ms,
+            mic_ready_in_ms=self.mic.ready_in_ms,
             frames_per_sec=len(self._fps_window) / 2.0,
             outputs={name: float(outputs[i]) for i, name in enumerate(BROW_OUTPUTS)},
             model_loaded=self.has_model,
@@ -443,7 +481,10 @@ class BrowSyncServer:
         log.info("Microphone processor started.")
 
     def recalibrate_head(self) -> None:
-        self._head.recalibrate()
+        self._engine.recalibrate("head")
+
+    def recalibrate(self, target: str) -> None:
+        self._engine.recalibrate(target)
 
     async def handle_client(self, ws):
         log.info(f"Client connected: {ws.remote_address}")
@@ -493,8 +534,14 @@ class BrowSyncServer:
                         await ws.send(json.dumps({"type": "reset_ack"}))
 
                     elif t == "recalibrate_head":
-                        self._head.recalibrate()
+                        # Legacy message — kept for VRCFT plugin backward compat
+                        self._engine.recalibrate("head")
                         await ws.send(json.dumps({"type": "recalibrate_head_ack"}))
+
+                    elif t == "recalibrate":
+                        target = msg.get("target", "all")
+                        ack = self._engine.recalibrate(target)
+                        await ws.send(json.dumps({"type": "recalibrate_ack", **ack}))
 
                     elif t == "set_mode":
                         session.requested_mode = msg.get("mode", "ml")
@@ -612,7 +659,7 @@ def main():
         server = BrowSyncServer(onnx_path=args.model, port=args.port, preview=bridge)
         app    = BrowSyncApp(
             server_run_coro=server.run(),
-            on_recalibrate=server.recalibrate_head,
+            on_recalibrate=server.recalibrate,
         )
         bridge.set_app(app)
         try:

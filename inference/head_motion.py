@@ -233,6 +233,20 @@ class HeadMotionTracker:
     def calibrated(self) -> bool:
         return self._calib.complete
 
+    @property
+    def settling(self) -> bool:
+        """True while OpenXR is available but calibration is still accumulating samples."""
+        return self._available and not self._calib.complete
+
+    @property
+    def ready_in_ms(self) -> int:
+        """Milliseconds until calibration is expected to lock; 0 when calibrated."""
+        if not self.settling or self._calib_start is None:
+            return 0
+        elapsed = time.monotonic() - self._calib_start
+        remaining = CALIBRATION_SECONDS - elapsed
+        return max(0, int(remaining * 1000))
+
     def recalibrate(self):
         self._calib       = CalibrationState()
         self._calib_start = None
@@ -423,7 +437,14 @@ class HeadMotionTracker:
             self._calib.add(pitch, roll, yaw, ty, tz)
             if t - self._calib_start >= CALIBRATION_SECONDS:
                 self._calib.finalise()
-            return HeadMotionFrame.zero()
+            # During settling: emit raw normalized frame (neutral = 0, no velocity history)
+            return HeadMotionFrame(
+                pitch=normalise(pitch, PITCH_RANGE_DEG),
+                roll=normalise(roll,   ROLL_RANGE_DEG),
+                yaw=normalise(yaw,     YAW_RANGE_DEG),
+                head_y=normalise(ty,   TRANS_Y_RANGE_M),
+                head_z=normalise(tz,   TRANS_Z_RANGE_M),
+            )
 
         # Offsets from neutral
         dp = pitch - self._calib.neutral_pitch

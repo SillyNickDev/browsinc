@@ -29,7 +29,10 @@ class PreviewStatus:
     eye_face_active: bool = False
     mic_active: bool = False
     head_active: bool = False
-    calibrating: bool = False
+    calibrating: bool = False       # head is settling
+    mic_settling: bool = False      # mic is in settling period after recalibrate
+    head_ready_in_ms: int = 0       # ms until head calibration locks; 0 when ready
+    mic_ready_in_ms: int = 0        # ms until mic settling ends; 0 when ready
     frames_per_sec: float = 0.0
     outputs: dict = field(default_factory=dict)   # {AU_name: float}
     model_loaded: bool = False

@@ -157,8 +157,8 @@ internal sealed class BrowSyncClient : IDisposable
         _state = WsConnectionState.Connected;
         BrowSyncModule.Log?.LogInformation("[BrowSync] Connected to BrowSync server.");
 
-        // Send initial reset so the GRU buffer is clean on (re)connect
-        await SendJsonAsync(ws, """{"type":"reset"}""", token);
+        // Recalibrate all subsystems on (re)connect so state is clean
+        await SendJsonAsync(ws, """{"type":"recalibrate","target":"all"}""", token);
 
         using var pingTimer = new PeriodicTimer(_pingInterval);
         var pingTask  = PingLoop(ws, pingTimer, token);
@@ -236,7 +236,7 @@ internal sealed class BrowSyncClient : IDisposable
                 _lastMode      = frame.Mode;
                 Interlocked.Increment(ref _framesReceived);
             }
-            // pong / reset_ack / mode_ack messages are silently ignored
+            // pong / reset_ack / recalibrate_ack / mode_ack messages are silently ignored
         }
         catch (JsonException)
         {
