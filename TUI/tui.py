@@ -263,3 +263,9 @@ class _TUIBridge:
             except Exception:
                 pass
 
+# ---------------------------------------------------------------------------
+# EASTER EGG! Bjork
+# ---------------------------------------------------------------------------
+# We love python... what a odd language... syntax error... you forgot a ;
+# 
+# SyntaxError: unexpected token 'browsync' 
