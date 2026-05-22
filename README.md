@@ -14,13 +14,19 @@ pipeline with a learned GRU residual model.
 browsync/
 ├── data/
 │   ├── schema.py          # Feature definitions, BrowFrame, NormStats
-│   └── sessions/          # Training data (.jsonl session files)
-│       ├── train/
-│       ├── val/
-│       └── donated/       # Opt-in Quest Pro labelled sessions
+│   ├── sessions/          # Training data (.jsonl session files)
+│   │   ├── train/
+│   │   ├── val/
+│   │   └── donated/       # Opt-in Quest Pro labelled sessions
+│   └── synthetic/         # Synthetic data generators and converters
+│       ├── generate_synthetic.py
+│       └── openface_converter.py
 ├── inference/
 │   ├── rules.py           # Rule-based baseline estimator (no ML)
-│   └── smoother.py        # Spring-damper output smoother
+│   ├── smoother.py        # Spring-damper output smoother
+│   ├── microphone.py      # Microphone prosody + speech emotion processor
+│   ├── head_motion.py     # OpenXR HMD pose tracker
+│   └── preview.py         # Real-time tkinter preview window
 ├── models/
 │   ├── gru_model.py       # GRU architecture + ONNX export
 │   ├── checkpoints/       # PyTorch training checkpoints
@@ -29,6 +35,9 @@ browsync/
 │   └── train.py           # Full training pipeline
 ├── ws_server/
 │   └── server.py          # WebSocket inference server
+├── TUI/
+│   └── tui.py             # Terminal UI (placeholder)
+├── prepare-data/          # Data preparation utilities
 └── requirements.txt
 ```
 
@@ -50,7 +59,7 @@ Default WebSocket endpoint: `ws://localhost:7720`
 
 ---
 
-## Input Features (41 total)
+## Input Features (52 total)
 
 | Group | Features | Source |
 |-------|----------|--------|
@@ -64,10 +73,11 @@ Missing features default to 0.0 — partial tracker setups are fully supported.
 
 ---
 
-## Output Features (7 total)
+## Output Features (8 total)
 
 All outputs are VRCFT Unified Expression parameters in [0, 1]:
-- `BrowInnerUp`
+
+- `BrowInnerUpLeft` / `BrowInnerUpRight`
 - `BrowOuterUpLeft` / `BrowOuterUpRight`
 - `BrowLowererLeft` / `BrowLowererRight`
 - `BrowPinchLeft` / `BrowPinchRight`
@@ -129,7 +139,8 @@ See `ws_server/server.py` for full protocol documentation.
   "type": "brow",
   "ts": 1234567890.123,
   "outputs": {
-    "BrowInnerUp": 0.34,
+    "BrowInnerUpLeft": 0.34,
+    "BrowInnerUpRight": 0.34,
     "BrowOuterUpLeft": 0.28,
     "BrowOuterUpRight": 0.31,
     "BrowLowererLeft": 0.05,
@@ -148,8 +159,8 @@ See `ws_server/server.py` for full protocol documentation.
 The exported `browsync.onnx` is self-contained:
 - Normalisation stats embedded in metadata
 - Feature names embedded in metadata
-- Single input: `float32[batch, 30, 41]`
-- Single output: `float32[batch, 7]` (Tanh residuals)
+- Single input: `float32[batch, 30, 52]`
+- Single output: `float32[batch, 8]` (Tanh residuals)
 
 The C# VRCFT module can load this directly via `Microsoft.ML.OnnxRuntime`
 without any separate config files.

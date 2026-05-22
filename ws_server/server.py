@@ -329,7 +329,7 @@ class InferenceEngine:
         head_array  = head_frame.to_array()
 
         prosody     = self.mic.latest
-        mic_active  = self.mic.is_available and prosody.is_speaking > 0 or self.mic.is_available
+        mic_active  = self.mic.is_available
 
         with self._vrcft_lock:
             vrcft_inputs = dict(self._vrcft_inputs)

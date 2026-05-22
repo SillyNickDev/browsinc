@@ -29,7 +29,8 @@ class AUSmootherParams:
 # Per-AU tuned parameters
 # Brow raises are fast and slightly springy; lowers are slower and critically damped
 DEFAULT_PARAMS: dict[str, AUSmootherParams] = {
-    "BrowInnerUp":       AUSmootherParams(attack_hz=8.0,  decay_hz=3.0,  stiffness=80.0, damping=0.9),
+    "BrowInnerUpLeft":   AUSmootherParams(attack_hz=8.0,  decay_hz=3.0,  stiffness=80.0, damping=0.9),
+    "BrowInnerUpRight":  AUSmootherParams(attack_hz=8.0,  decay_hz=3.0,  stiffness=80.0, damping=0.9),
     "BrowOuterUpLeft":   AUSmootherParams(attack_hz=7.0,  decay_hz=2.5,  stiffness=70.0, damping=0.85),
     "BrowOuterUpRight":  AUSmootherParams(attack_hz=7.0,  decay_hz=2.5,  stiffness=70.0, damping=0.85),
     "BrowLowererLeft":   AUSmootherParams(attack_hz=5.0,  decay_hz=4.0,  stiffness=60.0, damping=1.0),

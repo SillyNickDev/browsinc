@@ -316,7 +316,7 @@ class PreviewWindow:
             for side in ["Left", "Right"]:
                 ex = FACE_CX - 18 if side == "Left" else FACE_CX + 18
                 inner_up = outputs.get(f"BrowInnerUp{side}", 0.0)
-                outer_up = outputs.get(f"BrowOuter Up{side}", outputs.get(f"BrowOuterUp{side}", 0.0))
+                outer_up = outputs.get(f"BrowOuterUp{side}", 0.0)
                 lower    = outputs.get(f"BrowLowerer{side}", 0.0)
 
                 # Inner end rises with inner_up, outer end with outer_up

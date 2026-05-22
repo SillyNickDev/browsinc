@@ -403,7 +403,7 @@ def train(config: TrainConfig):
                     last_raw = x[i, -1].cpu().numpy() * norm_stats.std + norm_stats.mean
                     dummy = BrowFrame(timestamp_ms=0, inputs=last_raw, has_labels=False)
                     rule_batch.append(rule_est.estimate(dummy))
-                rule_tensor = torch.tensor(np.stack(rule_batch), dtype=torch.float32)
+                rule_tensor = torch.tensor(np.stack(rule_batch), dtype=torch.float32).to(device)
 
                 pred = model(x)
                 _, info = criterion(pred, rule_tensor, y, w, config.residual_scale)
