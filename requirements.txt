@@ -1,0 +1,22 @@
+# BrowSync — Python inference server dependencies
+# Python 3.11+
+
+# Core ML
+torch==2.3.1
+onnx==1.16.1
+onnxruntime==1.18.1
+
+# Audio / prosody
+librosa==0.10.2
+sounddevice==0.4.7
+numpy==1.26.4
+
+# WebSocket server
+websockets==12.0
+
+# Speech emotion recognition (optional — improves quality)
+speechbrain>=1.0.0    # emotion recognition for mic layer
+
+# Utilities
+scipy==1.13.1
+pyopenxr>=1.0.3
