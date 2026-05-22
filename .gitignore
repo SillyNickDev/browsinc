@@ -60,3 +60,4 @@ data/sessions/donated/**
 # Misc
 *.sqlite3
 *.db
+*.txt

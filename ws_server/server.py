@@ -27,6 +27,7 @@ import logging
 import time
 import threading
 import uuid
+from collections import deque
 from pathlib import Path
 from typing import Optional
 
@@ -41,7 +42,14 @@ from inference.rules import RuleBasedEstimator, apply_head_motion_rules
 from inference.smoother import BrowSmoother
 from inference.head_motion import HeadMotionTracker
 from inference.microphone import MicrophoneProcessor, MicrophoneProcessorWithSER
-from inference.preview import PreviewWindow, PreviewStatus
+from inference.preview import PreviewStatus
+
+
+class _NullPreview:
+    """No-op preview for --no-tui / headless mode (no Textual dependency)."""
+    def start(self) -> None: pass
+    def stop(self)  -> None: pass
+    def update(self, _status) -> None: pass
 
 
 def _make_mic_processor() -> MicrophoneProcessor:
@@ -212,7 +220,7 @@ class InferenceEngine:
 
         # FPS tracking
         self._frame_count: int = 0
-        self._fps_window: list = []
+        self._fps_window: deque = deque()
 
     def _load_model(self, onnx_path: Optional[Path]):
         if not onnx_path or not Path(onnx_path).exists():
@@ -394,7 +402,7 @@ class InferenceEngine:
         now = time.monotonic()
         self._fps_window.append(now)
         while self._fps_window and now - self._fps_window[0] > 2.0:
-            self._fps_window.pop(0)
+            self._fps_window.popleft()
 
         status = PreviewStatus(
             mode=mode,
@@ -404,6 +412,7 @@ class InferenceEngine:
             calibrating=self.head_tracker.is_available and not self.head_tracker.calibrated,
             frames_per_sec=len(self._fps_window) / 2.0,
             outputs={name: float(outputs[i]) for i, name in enumerate(BROW_OUTPUTS)},
+            model_loaded=self.has_model,
         )
         self.preview.update(status)
 
@@ -419,21 +428,22 @@ class InferenceEngine:
 
 class BrowSyncServer:
 
-    def __init__(self, onnx_path: Optional[Path] = None, port: int = DEFAULT_PORT):
+    def __init__(self, onnx_path: Optional[Path] = None, port: int = DEFAULT_PORT, preview=None):
         self.port = port
 
-        self._head   = HeadMotionTracker(target_fps=90.0)
-        self._mic    = _make_mic_processor()
-        self._preview = PreviewWindow()
-        self._engine = InferenceEngine(onnx_path, self._head, self._mic, self._preview)
+        self._head    = HeadMotionTracker(target_fps=90.0)
+        self._mic     = _make_mic_processor()
+        self._preview = preview if preview is not None else _NullPreview()
+        self._engine  = InferenceEngine(onnx_path, self._head, self._mic, self._preview)
 
         self._head.start()
         self._mic.start()
-        self._preview.start()
 
         log.info("Head motion tracker started.")
         log.info("Microphone processor started.")
-        log.info("Preview window started.")
+
+    def recalibrate_head(self) -> None:
+        self._head.recalibrate()
 
     async def handle_client(self, ws):
         log.info(f"Client connected: {ws.remote_address}")
@@ -539,6 +549,7 @@ class BrowSyncServer:
         }
         if session.donation_file:
             session.donation_file.write(json.dumps(record) + "\n")
+            session.donation_file.flush()
 
     async def run(self):
         loop = asyncio.get_running_loop()
@@ -558,7 +569,6 @@ class BrowSyncServer:
         self._engine.stop()
         self._head.stop()
         self._mic.stop()
-        self._preview.stop()
 
 
 # ---------------------------------------------------------------------------
@@ -568,18 +578,49 @@ class BrowSyncServer:
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="BrowSync inference server")
-    parser.add_argument("--model",    type=Path, default=Path("models/browsync.onnx"))
-    parser.add_argument("--port",     type=int,  default=DEFAULT_PORT)
-    parser.add_argument("--no-preview", action="store_true", help="Disable preview window")
+    parser.add_argument("--model",   type=Path, default=Path("models/browsync.onnx"))
+    parser.add_argument("--port",    type=int,  default=DEFAULT_PORT)
+    parser.add_argument("--no-tui",  action="store_true",
+                        help="Headless mode: disable terminal UI, log to console instead")
     args = parser.parse_args()
 
-    server = BrowSyncServer(onnx_path=args.model, port=args.port)
-    try:
-        asyncio.run(server.run())
-    except KeyboardInterrupt:
-        log.info("Shutting down.")
-    finally:
-        server.shutdown()
+    if args.no_tui:
+        # Headless mode — plain asyncio loop, logs stay on stdout
+        server = BrowSyncServer(onnx_path=args.model, port=args.port)
+        try:
+            asyncio.run(server.run())
+        except KeyboardInterrupt:
+            log.info("Shutting down.")
+        finally:
+            server.shutdown()
+    else:
+        # TUI mode — Textual is the main loop; server runs as an asyncio worker inside it.
+        # Server errors are shown as TUI notifications; all logs also go to browsync.log.
+        from TUI.tui import BrowSyncApp, _TUIBridge
+        from textual.logging import TextualHandler
+
+        file_handler = logging.FileHandler("browsync.log", encoding="utf-8")
+        file_handler.setFormatter(logging.Formatter(
+            "[BrowSync] %(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S"
+        ))
+        for h in logging.root.handlers[:]:
+            logging.root.removeHandler(h)
+        logging.root.addHandler(TextualHandler())
+        logging.root.addHandler(file_handler)
+
+        bridge = _TUIBridge()
+        server = BrowSyncServer(onnx_path=args.model, port=args.port, preview=bridge)
+        app    = BrowSyncApp(
+            server_run_coro=server.run(),
+            on_recalibrate=server.recalibrate_head,
+        )
+        bridge.set_app(app)
+        try:
+            app.run()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            server.shutdown()
 
 
 if __name__ == "__main__":

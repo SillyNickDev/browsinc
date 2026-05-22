@@ -20,3 +20,6 @@ speechbrain>=1.0.0    # emotion recognition for mic layer
 # Utilities
 scipy==1.13.1
 pyopenxr>=1.0.3
+
+# Terminal UI
+textual>=0.47.0

@@ -32,6 +32,7 @@ class PreviewStatus:
     calibrating: bool = False
     frames_per_sec: float = 0.0
     outputs: dict = field(default_factory=dict)   # {AU_name: float}
+    model_loaded: bool = False
 
 
 # ---------------------------------------------------------------------------
